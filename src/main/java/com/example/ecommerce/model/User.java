@@ -16,7 +16,7 @@ public class User {
     private String email; // Email do usuário
     private String password; // Senha
     private Double creditBalance = 0.0; // Saldo do cartão de crédito
-    private Boolean isAdmin; // Indica se o usuário é administrador
+
 
 
     // Construtores
@@ -27,7 +27,7 @@ public class User {
         this.email = email;
         this.password = password;
         this.creditBalance = creditBalance;
-        this.isAdmin = isAdmin;
+
     }
 
     // Getters e Setters
@@ -71,11 +71,5 @@ public class User {
         this.creditBalance = creditBalance;
     }
 
-    public Boolean getIsAdmin() {
-        return isAdmin;
-    }
 
-    public void setIsAdmin(Boolean isAdmin) {
-        this.isAdmin = isAdmin;
-    }
 }
