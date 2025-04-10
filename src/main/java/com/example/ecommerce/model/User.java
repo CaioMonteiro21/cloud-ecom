@@ -22,7 +22,7 @@ public class User {
     // Construtores
     public User() {}
 
-    public User(String name, String email, String password, Double creditBalance, Boolean isAdmin) {
+    public User(String name, String email, String password, Double creditBalance) {
         this.name = name;
         this.email = email;
         this.password = password;

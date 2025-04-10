@@ -1,29 +1,19 @@
 package com.example.ecommerce.model;
 
-
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-
-@Entity
 public class Produto {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // ID único para identificar o produto
-
+    private String id; // ID único para identificar o produto
     private String nome; // Nome do produto
     private Double preco; // Preço do produto
     private Integer estoque; // Quantidade disponível no estoque
     private String descricao; // Descrição do produto
-    private String categoria; // Categoria do produto (Ex.: Eletrônicos)
+    private String categoria; // Categoria do produto
 
     // Construtores
     public Produto() {}
 
-    public Produto(String nome, Double preco, Integer estoque, String descricao, String categoria) {
+    public Produto(String id, String nome, Double preco, Integer estoque, String descricao, String categoria) {
+        this.id = id;
         this.nome = nome;
         this.preco = preco;
         this.estoque = estoque;
@@ -32,11 +22,11 @@ public class Produto {
     }
 
     // Getters e Setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 

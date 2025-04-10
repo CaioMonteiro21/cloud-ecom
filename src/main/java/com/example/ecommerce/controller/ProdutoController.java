@@ -1,95 +1,97 @@
 package com.example.ecommerce.controller;
 
-
-
-
-
 import com.example.ecommerce.model.Produto;
-import com.example.ecommerce.repository.ProdutoRepository;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import com.azure.cosmos.*;
+import com.azure.cosmos.models.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
 @RequestMapping("/produtos")
 public class ProdutoController {
 
-    @Autowired
-    private ProdutoRepository produtoRepository;
+    private final CosmosContainer cosmosContainer;
 
-    // **Adicionar Produto**
+    // Configurar Cosmos Client e Container
+    public ProdutoController() {
+        String endpoint = "https://cloud-ecommerce02.documents.azure.com:443/";
+        String key = "k1cPk5uIiZrZ61U13pKn0qQYeDo2KGQESNavwkMCgNzc0prT2WdIkGLKNCT8XW4sY9mWPiXKEmR8ACDbZlmebg==";
+        String databaseName = "produtos";
+        String containerName = "produtos";
+
+        CosmosClient cosmosClient = new CosmosClientBuilder()
+                .endpoint(endpoint)
+                .key(key)
+                .buildClient();
+
+        // Certifique-se de que o container e o banco de dados existem!
+        cosmosContainer = cosmosClient.getDatabase(databaseName).getContainer(containerName);
+    }
+
+    // Adicionar Produto
     @PostMapping
     public ResponseEntity<Produto> adicionarProduto(@RequestBody Produto produto) {
         try {
-            Produto novoProduto = produtoRepository.save(produto);
-            return new ResponseEntity<>(novoProduto, HttpStatus.CREATED); // Retorna status 201 CREATED
-        } catch (Exception e) {
+            cosmosContainer.createItem(produto); // Insere diretamente no Cosmos DB
+            return new ResponseEntity<>(produto, HttpStatus.CREATED);
+        } catch (CosmosException e) {
+            e.printStackTrace();
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    // **Listar Todos os Produtos**
+    // Listar todos os produtos
     @GetMapping
     public ResponseEntity<List<Produto>> listarProdutos() {
         try {
-            List<Produto> produtos = produtoRepository.findAll();
+            List<Produto> produtos = new ArrayList<>();
+            cosmosContainer.readAllItems(new CosmosQueryRequestOptions().getPartitionKey(), Produto.class)
+                    .forEach(produtos::add);
+
             if (produtos.isEmpty()) {
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT); // Retorna 204 se a lista estiver vazia
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
-            return new ResponseEntity<>(produtos, HttpStatus.OK); // Retorna status 200 OK
-        } catch (Exception e) {
+            return new ResponseEntity<>(produtos, HttpStatus.OK);
+        } catch (CosmosException e) {
+            e.printStackTrace();
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    // **Buscar Produto por ID**
+    // Buscar Produto por ID
     @GetMapping("/{id}")
-    public ResponseEntity<Produto> buscarProdutoPorId(@PathVariable Long id) {
+    public ResponseEntity<Produto> buscarProdutoPorId(@PathVariable String id, @RequestParam String categoria) {
         try {
-            Produto produto = produtoRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
-            return new ResponseEntity<>(produto, HttpStatus.OK); // Retorna status 200 OK
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND); // Retorna status 404 NOT FOUND
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            Produto produto = cosmosContainer.readItem(id, new PartitionKey(categoria), Produto.class).getItem();
+            return new ResponseEntity<>(produto, HttpStatus.OK);
+        } catch (CosmosException e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }
     }
 
-    // **Atualizar Produto**
+    // Atualizar Produto
     @PutMapping("/{id}")
-    public ResponseEntity<Produto> atualizarProduto(@PathVariable Long id, @RequestBody Produto produtoAtualizado) {
+    public ResponseEntity<Produto> atualizarProduto(@PathVariable String id, @RequestParam String categoria, @RequestBody Produto produtoAtualizado) {
         try {
-            Produto produtoExistente = produtoRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+            Produto produtoExistente = cosmosContainer.readItem(id, new PartitionKey(categoria), Produto.class).getItem();
 
+            // Atualizar valores do produto
             produtoExistente.setNome(produtoAtualizado.getNome());
             produtoExistente.setPreco(produtoAtualizado.getPreco());
             produtoExistente.setEstoque(produtoAtualizado.getEstoque());
             produtoExistente.setDescricao(produtoAtualizado.getDescricao());
             produtoExistente.setCategoria(produtoAtualizado.getCategoria());
 
-            Produto produtoAtualizadoNoBanco = produtoRepository.save(produtoExistente);
-            return new ResponseEntity<>(produtoAtualizadoNoBanco, HttpStatus.OK); // Retorna status 200 OK
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND); // Retorna status 404 NOT FOUND
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    // **Deletar Produto**
-    @DeleteMapping("/{id}")
-    public ResponseEntity<HttpStatus> deletarProduto(@PathVariable Long id) {
-        try {
-            produtoRepository.deleteById(id);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT); // Retorna status 204 NO CONTENT
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR); // Retorna status 500 INTERNAL SERVER ERROR
+            cosmosContainer.upsertItem(produtoExistente); // Atualiza ou insere o item
+            return new ResponseEntity<>(produtoExistente, HttpStatus.OK);
+        } catch (CosmosException e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }
     }
 }
