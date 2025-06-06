@@ -19,7 +19,7 @@ public class ProdutoController {
     // Configurar Cosmos Client e Container
     public ProdutoController() {
         String endpoint = "https://cloud-ecommerce02.documents.azure.com:443/";
-        String key = "FCiMBJTgXjvW3CK0chvkGAVEn2eR9UqGHOjRaCa2GSY4FgwxtRvwtkN23hj08mWrLODn7Gx6fy8VACDbycJD7A==";
+        String key ="FCiMBJTgXjvW3CK0chvkGAVEn2eR9UqGHOjRaCa2GSY4FgwxtRvwtkN23hj08mWrLODn7Gx6fy8VACDbycJD7A==";
         String databaseName = "produtos";
         String containerName = "produtos";
 
