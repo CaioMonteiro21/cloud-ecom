@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.4.4</version>
+		<version>3.2.5</version> <!-- Recomendo usar 3.2.5 para melhor compatibilidade com o Spring Cloud Azure 4.13.0 -->
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.example</groupId>
@@ -15,6 +15,8 @@
 	<description>Demo project for Spring Boot</description>
 	<properties>
 		<java.version>17</java.version>
+		<!-- Defina a versão do Spring Cloud Azure aqui -->
+		<spring-cloud-azure.version>4.13.0</spring-cloud-azure.version>
 	</properties>
 	<dependencies>
 		<!-- Dependências do Spring Boot -->
@@ -42,25 +44,47 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<!-- A dependência tomcat-embed-core é geralmente incluída pelo spring-boot-starter-web.
+             Se você não precisa de uma versão específica, pode removê-la para evitar conflitos. -->
 		<dependency>
 			<groupId>org.apache.tomcat.embed</groupId>
 			<artifactId>tomcat-embed-core</artifactId>
 			<version>10.1.39</version>
 		</dependency>
 
-		<!-- Dependências para Cosmos DB -->
+		<!-- Dependência NECESSÁRIA para Spring Data Cosmos DB -->
 		<dependency>
-			<groupId>com.azure</groupId>
-			<artifactId>azure-cosmos</artifactId>
-			<version>4.48.0</version> <!-- SDK principal do Cosmos DB -->
+			<groupId>com.azure.spring</groupId>
+			<artifactId>spring-cloud-azure-starter-data-cosmos</artifactId>
 		</dependency>
 
+		<!-- Lombok (opcional, mas recomendado para reduzir boilerplate) -->
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- A dependência hibernate-core é geralmente gerenciada pelo spring-boot-starter-data-jpa.
+             Se você não precisa de uma versão específica, pode removê-la. -->
 		<dependency>
 			<groupId>org.hibernate.orm</groupId>
 			<artifactId>hibernate-core</artifactId>
 			<version>6.6.11.Final</version>
 		</dependency>
 	</dependencies>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.azure.spring</groupId>
+				<artifactId>spring-cloud-azure-dependencies</artifactId>
+				<version>${spring-cloud-azure.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<build>
 		<plugins>
@@ -71,13 +95,12 @@
 		</plugins>
 	</build>
 
-	<repositories>
-		<!-- Repositório para Cosmos DB -->
-		<repository>
-			<id>azure-sdk</id>
-			<url>https://packages.microsoft.com/maven/azure-sdk</url>
-		</repository>
-	</repositories>
-
+	<!-- O repositório azure-sdk não é mais necessário para as starters do Spring Cloud Azure -->
+	<!-- <repositories>
+        <repository>
+            <id>azure-sdk</id>
+            <url>https://packages.microsoft.com/maven/azure-sdk</url>
+        </repository>
+    </repositories> -->
 
 </project>
